@@ -127,3 +127,11 @@ Uma experiência web, acessível pelo seu navegador.
 <sub>Desenvolvido como uma adaptação web independente do Nuvio TV.</sub>
 
 </div>
+
+## 🐛 Reportar problemas
+
+Encontrou algum bug ou problema no Nuvio Web? Entre em contato pelo e-mail:
+
+📧 **[zkugoz@gmail.com](mailto:zkugoz@gmail.com)**
+
+Ao enviar o e-mail, descreva o problema e, se possível, informe como reproduzi-lo.

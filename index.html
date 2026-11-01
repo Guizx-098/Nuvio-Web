@@ -57,6 +57,7 @@
   // movimento real do ponteiro (sem tecla recente) = TV em modo ponteiro: libera o ponteiro
   ["mousemove","pointermove","mouseover","mouseenter","mouseout","mouseleave","pointerover","pointerenter","pointerout","pointerleave"].forEach(function(t){
     window.addEventListener(t, function(e){
+      if(pad && t === "mousemove") padMove(e);
       if(t === "mousemove" || t === "pointermove"){
         moves++;
         var moved = (e.clientX !== lx || e.clientY !== ly);
@@ -80,6 +81,53 @@
     }
   }, false);
 
+  // MODO CONTROLE (?pad=1): transforma o movimento da seta da TV em botões direcionais
+  var pad = /[?&]pad=1/.test(q), padT = 30, padOut = 0, locked = false, lockErr = 0, accX = 0, accY = 0, lastEmit = 0, pdx = 0, pdy = 0;
+  var tm = q.match(/[?&]t=(\d+)/); if(tm) padT = Math.max(4, parseInt(tm[1], 10));
+  function press(code, key){
+    function mk(type){
+      var ev = new KeyboardEvent(type, {key: key, code: key, keyCode: code, which: code, bubbles: true, cancelable: true});
+      try{ Object.defineProperty(ev, "keyCode", {get: function(){ return code; }}); Object.defineProperty(ev, "which", {get: function(){ return code; }}); }catch(e){}
+      (document.activeElement || document.body).dispatchEvent(ev);
+    }
+    mk("keydown"); setTimeout(function(){ mk("keyup"); }, 30);
+    padOut++;
+  }
+  function lockPtr(){
+    try{
+      var r = document.documentElement.requestPointerLock && document.documentElement.requestPointerLock();
+      if(r && r.catch) r.catch(function(){ lockErr++; });
+    }catch(e){ lockErr++; }
+  }
+  if(pad){
+    setKb(true); kbAt = Date.now() + 1e12; // esconde a seta e mantém o modo "botões"
+    document.addEventListener("pointerlockchange", function(){ locked = !!document.pointerLockElement; paint(); });
+    document.addEventListener("pointerlockerror", function(){ lockErr++; paint(); });
+  }
+  function padMove(e){
+    {
+      var dx, dy;
+      if(locked){ dx = e.movementX || 0; dy = e.movementY || 0; }
+      else { dx = (plx < 0) ? 0 : e.clientX - plx; dy = (ply < 0) ? 0 : e.clientY - ply; }
+      plx = e.clientX; ply = e.clientY;
+      pdx = dx; pdy = dy; accX += dx; accY += dy;
+      var now = Date.now();
+      if((Math.abs(accX) >= padT || Math.abs(accY) >= padT) && now - lastEmit >= 110){
+        if(Math.abs(accX) >= Math.abs(accY)) press(accX > 0 ? 39 : 37, accX > 0 ? "ArrowRight" : "ArrowLeft");
+        else press(accY > 0 ? 40 : 38, accY > 0 ? "ArrowDown" : "ArrowUp");
+        accX = 0; accY = 0; lastEmit = now;
+      }
+      paint();
+    }
+  }
+  if(pad){
+    window.addEventListener("click", function(e){
+      e.stopImmediatePropagation(); e.preventDefault();
+      if(!locked && !lockErr) lockPtr();
+      press(13, "Enter");
+    }, true);
+  }
+  var plx = -1, ply = -1;
   var box = null;
   function paint(){
     if(!dbg) return;
@@ -89,7 +137,7 @@
       box.style.cssText = "position:fixed;left:0;top:0;z-index:2147483647;background:#000;color:#ff0;font:bold 26px monospace;padding:10px;max-width:90%;pointer-events:none;white-space:pre-wrap";
       document.body.appendChild(box);
     }
-    box.textContent = "MODO TV: ligado\ntecla: " + lastKey + " (total " + keys + ")\nmouse mov: " + moves + "\nnavegando por: " + (kb ? "BOTOES" : "PONTEIRO") + "\nUA: " + ua.slice(0, 140);
+    box.textContent = "MODO TV: ligado\ntecla: " + lastKey + " (total " + keys + ")\nmouse mov: " + moves + "\nnavegando por: " + (kb ? "BOTOES" : "PONTEIRO") + (pad ? "\nPAD: ligado | trava: " + (locked ? "sim" : "nao") + " erro:" + lockErr + " | dx:" + pdx + " dy:" + pdy + " | teclas geradas:" + padOut + " | limite:" + padT : "") + "\nUA: " + ua.slice(0, 140);
   }
   if(dbg){ document.addEventListener("DOMContentLoaded", paint); setInterval(paint, 700); }
 })();

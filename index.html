@@ -23,15 +23,12 @@
 </script>
 <script>
 (function(){
-  var ua = navigator.userAgent || "", q = location.search || "", mode = null;
+  var ua = navigator.userAgent || "", q = location.search || "";
+  try{ localStorage.removeItem("nuvio_tv_mode"); }catch(e){}
+  var forced = window.__NUVIO_FORCE_TV__ === 1;
   var m = q.match(/[?&]tv=(\d)/);
-  try{
-    if(m) localStorage.setItem("nuvio_tv_mode", m[1]);
-    mode = localStorage.getItem("nuvio_tv_mode");
-  }catch(e){ if(m) mode = m[1]; }
-  var auto = /(\bTV\b|smart-?tv|nettv|philips|saphi|hbbtv|vewd|opera tv|opera\/9\.80|crkey|viera|netcast|aquos|bravia)/i.test(ua);
-  var on = mode === "1" || (mode !== "0" && auto);
-  window.__NUVIO_TV_MODE__ = on;
+  var on = forced || (m && m[1] === "1");
+  window.__NUVIO_TV_MODE__ = !!on;
   var dbg = /[?&]debug=1/.test(q);
   if(!on) return;
   var root = document.documentElement;
@@ -83,7 +80,7 @@
   }, false);
 
   // MODO CONTROLE (?pad=1): transforma o movimento da seta da TV em botões direcionais
-  var pad = /[?&]pad=1/.test(q), padT = 1, padGap = 120, lastMove = 0, padOut = 0, locked = false, lockErr = 0, accX = 0, accY = 0, lastEmit = 0, pdx = 0, pdy = 0;
+  var pad = (window.__NUVIO_FORCE_TV__ === 1) || /[?&]pad=1/.test(q), padT = 1, padGap = 120, lastMove = 0, padOut = 0, locked = false, lockErr = 0, accX = 0, accY = 0, lastEmit = 0, pdx = 0, pdy = 0;
   var tm = q.match(/[?&]t=(\d+)/); if(tm) padT = Math.max(1, parseInt(tm[1], 10));
   var gm = q.match(/[?&]g=(\d+)/); if(gm) padGap = Math.max(30, parseInt(gm[1], 10));
   function press(code, key){

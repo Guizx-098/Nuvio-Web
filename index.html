@@ -29,13 +29,14 @@
     if(m) localStorage.setItem("nuvio_tv_mode", m[1]);
     mode = localStorage.getItem("nuvio_tv_mode");
   }catch(e){ if(m) mode = m[1]; }
-  var auto = /(\bTV\b|smart-?tv|nettv|philips|saphi|hbbtv|crkey|viera|netcast|aquos|bravia)/i.test(ua);
+  var auto = /(\bTV\b|smart-?tv|nettv|philips|saphi|hbbtv|vewd|opera tv|opera\/9\.80|crkey|viera|netcast|aquos|bravia)/i.test(ua);
   var on = mode === "1" || (mode !== "0" && auto);
   window.__NUVIO_TV_MODE__ = on;
   if(!on) return;
   document.documentElement.className += " tv-mode";
   var st = document.createElement("style");
-  st.textContent = "html.tv-mode,html.tv-mode *{cursor:none!important}";
+  var gif = "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
+  st.textContent = "html.tv-mode,html.tv-mode *,html.tv-mode body,html.tv-mode video{cursor:url(" + gif + ") 0 0,none!important}";
   document.head.appendChild(st);
   // bloqueia o ponteiro (mouse/setinha): só o controle navega
   ["mousemove","pointermove","mouseover","mouseenter","mouseout","mouseleave","pointerover","pointerenter","pointerout","pointerleave","wheel"].forEach(function(t){

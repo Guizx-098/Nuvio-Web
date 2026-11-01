@@ -37,8 +37,9 @@
   var root = document.documentElement;
   root.className += " tv-mode";
   var gif = "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
+  var png = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
   var st = document.createElement("style");
-  st.textContent = "html.tv-kb,html.tv-kb *,html.tv-kb video{cursor:url(" + gif + ") 0 0,none!important}";
+  st.textContent = "html.tv-kb,html.tv-kb *,html.tv-kb video{cursor:url(" + png + ") 0 0,url(" + gif + ") 0 0,none!important}";
   document.head.appendChild(st);
 
   var kb = false, kbAt = 0, enterAt = 0, moves = 0, keys = 0, lastKey = "-", lx = -1, ly = -1;
@@ -82,8 +83,9 @@
   }, false);
 
   // MODO CONTROLE (?pad=1): transforma o movimento da seta da TV em botões direcionais
-  var pad = /[?&]pad=1/.test(q), padT = 30, padOut = 0, locked = false, lockErr = 0, accX = 0, accY = 0, lastEmit = 0, pdx = 0, pdy = 0;
-  var tm = q.match(/[?&]t=(\d+)/); if(tm) padT = Math.max(4, parseInt(tm[1], 10));
+  var pad = /[?&]pad=1/.test(q), padT = 1, padGap = 120, lastMove = 0, padOut = 0, locked = false, lockErr = 0, accX = 0, accY = 0, lastEmit = 0, pdx = 0, pdy = 0;
+  var tm = q.match(/[?&]t=(\d+)/); if(tm) padT = Math.max(1, parseInt(tm[1], 10));
+  var gm = q.match(/[?&]g=(\d+)/); if(gm) padGap = Math.max(30, parseInt(gm[1], 10));
   function press(code, key){
     function mk(type){
       var ev = new KeyboardEvent(type, {key: key, code: key, keyCode: code, which: code, bubbles: true, cancelable: true});
@@ -110,9 +112,11 @@
       if(locked){ dx = e.movementX || 0; dy = e.movementY || 0; }
       else { dx = (plx < 0) ? 0 : e.clientX - plx; dy = (ply < 0) ? 0 : e.clientY - ply; }
       plx = e.clientX; ply = e.clientY;
-      pdx = dx; pdy = dy; accX += dx; accY += dy;
+      pdx = dx; pdy = dy;
       var now = Date.now();
-      if((Math.abs(accX) >= padT || Math.abs(accY) >= padT) && now - lastEmit >= 110){
+      if(now - lastMove > 250){ accX = 0; accY = 0; }
+      lastMove = now; accX += dx; accY += dy;
+      if((Math.abs(accX) >= padT || Math.abs(accY) >= padT) && now - lastEmit >= padGap){
         if(Math.abs(accX) >= Math.abs(accY)) press(accX > 0 ? 39 : 37, accX > 0 ? "ArrowRight" : "ArrowLeft");
         else press(accY > 0 ? 40 : 38, accY > 0 ? "ArrowDown" : "ArrowUp");
         accX = 0; accY = 0; lastEmit = now;
@@ -123,7 +127,7 @@
   if(pad){
     window.addEventListener("click", function(e){
       e.stopImmediatePropagation(); e.preventDefault();
-      if(!locked && !lockErr) lockPtr();
+      if(!locked) lockPtr();
       press(13, "Enter");
     }, true);
   }
@@ -137,7 +141,7 @@
       box.style.cssText = "position:fixed;left:0;top:0;z-index:2147483647;background:#000;color:#ff0;font:bold 26px monospace;padding:10px;max-width:90%;pointer-events:none;white-space:pre-wrap";
       document.body.appendChild(box);
     }
-    box.textContent = "MODO TV: ligado\ntecla: " + lastKey + " (total " + keys + ")\nmouse mov: " + moves + "\nnavegando por: " + (kb ? "BOTOES" : "PONTEIRO") + (pad ? "\nPAD: ligado | trava: " + (locked ? "sim" : "nao") + " erro:" + lockErr + " | dx:" + pdx + " dy:" + pdy + " | teclas geradas:" + padOut + " | limite:" + padT : "") + "\nUA: " + ua.slice(0, 140);
+    box.textContent = "MODO TV: ligado\ntecla: " + lastKey + " (total " + keys + ")\nmouse mov: " + moves + "\nnavegando por: " + (kb ? "BOTOES" : "PONTEIRO") + (pad ? "\nPAD: ligado | trava: " + (locked ? "sim" : "nao") + " erro:" + lockErr + " | dx:" + pdx + " dy:" + pdy + " | teclas geradas:" + padOut + " | limite:" + padT + " intervalo:" + padGap : "") + "\nUA: " + ua.slice(0, 140);
   }
   if(dbg){ document.addEventListener("DOMContentLoaded", paint); setInterval(paint, 700); }
 })();

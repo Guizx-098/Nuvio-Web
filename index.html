@@ -95,11 +95,15 @@
     mk("keydown"); setTimeout(function(){ mk("keyup"); }, 30);
     padOut++;
   }
+  var lockTry = 0, fsOn = /[?&]fs=1/.test(q);
   function lockPtr(){
+    lockTry++;
     try{
-      var r = document.documentElement.requestPointerLock && document.documentElement.requestPointerLock();
+      var el = (lockTry % 2) ? document.documentElement : (document.body || document.documentElement);
+      var r = el.requestPointerLock && el.requestPointerLock();
       if(r && r.catch) r.catch(function(){ lockErr++; });
     }catch(e){ lockErr++; }
+    if(fsOn){ try{ var d = document.documentElement; (d.requestFullscreen || d.webkitRequestFullscreen || function(){}).call(d); }catch(e){} }
   }
   if(pad){
     setKb(true); kbAt = Date.now() + 1e12; // esconde a seta e mantém o modo "botões"
@@ -125,6 +129,7 @@
     }
   }
   if(pad){
+    ["mousedown","mouseup","pointerdown","pointerup"].forEach(function(t){ window.addEventListener(t, function(){ if(!locked) lockPtr(); }, true); });
     window.addEventListener("click", function(e){
       e.stopImmediatePropagation(); e.preventDefault();
       if(!locked) lockPtr();
@@ -141,7 +146,7 @@
       box.style.cssText = "position:fixed;left:0;top:0;z-index:2147483647;background:#000;color:#ff0;font:bold 26px monospace;padding:10px;max-width:90%;pointer-events:none;white-space:pre-wrap";
       document.body.appendChild(box);
     }
-    box.textContent = "MODO TV: ligado\ntecla: " + lastKey + " (total " + keys + ")\nmouse mov: " + moves + "\nnavegando por: " + (kb ? "BOTOES" : "PONTEIRO") + (pad ? "\nPAD: ligado | trava: " + (locked ? "sim" : "nao") + " erro:" + lockErr + " | dx:" + pdx + " dy:" + pdy + " | teclas geradas:" + padOut + " | limite:" + padT + " intervalo:" + padGap : "") + "\nUA: " + ua.slice(0, 140);
+    box.textContent = "MODO TV: ligado\ntecla: " + lastKey + " (total " + keys + ")\nmouse mov: " + moves + "\nnavegando por: " + (kb ? "BOTOES" : "PONTEIRO") + (pad ? "\nPAD: ligado | trava: " + (locked ? "sim" : "nao") + " erro:" + lockErr + " | dx:" + pdx + " dy:" + pdy + " | teclas geradas:" + padOut + " | limite:" + padT + " intervalo:" + padGap : "") + (pad ? "\nAPI trava: " + (document.documentElement.requestPointerLock ? "existe" : "NAO existe") + " | tentativas:" + lockTry + " | tela cheia: " + (document.fullscreenElement ? "sim" : "nao") : "") + "\nUA: " + ua.slice(0, 140);
   }
   if(dbg){ document.addEventListener("DOMContentLoaded", paint); setInterval(paint, 700); }
 })();

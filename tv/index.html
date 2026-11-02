@@ -92,7 +92,7 @@
     mk("keydown"); setTimeout(function(){ mk("keyup"); }, 30);
     padOut++;
   }
-  var lockTry = 0, fsOn = /[?&]fs=1/.test(q);
+  var lockTry = 0, fsOn = pad || /[?&]fs=1/.test(q);
   function lockPtr(){
     lockTry++;
     try{
@@ -100,7 +100,7 @@
       var r = el.requestPointerLock && el.requestPointerLock();
       if(r && r.catch) r.catch(function(){ lockErr++; });
     }catch(e){ lockErr++; }
-    if(fsOn){ try{ var d = document.documentElement; (d.requestFullscreen || d.webkitRequestFullscreen || function(){}).call(d); }catch(e){} }
+    if(fsOn && !document.fullscreenElement){ try{ var d = document.documentElement; var rr = (d.requestFullscreen || d.webkitRequestFullscreen || function(){}).call(d); if(rr && rr.catch) rr.catch(function(){}); }catch(e){} }
   }
   if(pad){
     setKb(true); kbAt = Date.now() + 1e12; // esconde a seta e mantém o modo "botões"

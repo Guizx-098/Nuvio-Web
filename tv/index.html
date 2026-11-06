@@ -566,9 +566,19 @@ __NV_ENDSCRIPT__>
 </script>
 <script>
 (function(){
+  var SPACE_FIX = '<scr' + 'ipt>(function(){' +
+    'function synth(type,base){var ev=new KeyboardEvent(type,{key:"Enter",code:"Enter",keyCode:13,which:13,bubbles:true,cancelable:true,repeat:!!(base&&base.repeat)});' +
+    'try{Object.defineProperty(ev,"keyCode",{get:function(){return 13}});Object.defineProperty(ev,"which",{get:function(){return 13}});}catch(_){}return ev;}' +
+    'function isSpace(e){return e&&(e.key===" "||e.code==="Space"||e.keyCode===32);}' +
+    'function isEditable(e){var t=e&&e.target,tag=t&&t.tagName?t.tagName.toLowerCase():"";return tag==="input"||tag==="textarea"||(t&&t.isContentEditable);}' +
+    'document.addEventListener("keydown",function(e){if(!isSpace(e)||isEditable(e))return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();(e.target||document.body).dispatchEvent(synth("keydown",e));},true);' +
+    'document.addEventListener("keyup",function(e){if(!isSpace(e)||isEditable(e))return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();(e.target||document.body).dispatchEvent(synth("keyup",e));},true);' +
+    '})();</scr' + 'ipt>';
+  var srcHead = document.getElementById("nv-src") ? 1 : 0;
   var ua = navigator.userAgent || "", touch = (navigator.maxTouchPoints || 0) > 0;
   var mobile = /Android|iPhone|iPad|iPod|Mobile/i.test(ua) || (touch && Math.min(screen.width, screen.height) < 900);
   var src = document.getElementById("nv-src").textContent.split("__NV_ENDSCRIPT__").join("</" + "script").split("__NV_COMMENT__").join("<" + "!--");
+  src = src.replace("<head>", "<head>" + SPACE_FIX);
   function ratio(){
     var z = Math.min(innerWidth / 1920, innerHeight / 960);
     if(z > 0.96 && z < 1.04) z = 1;

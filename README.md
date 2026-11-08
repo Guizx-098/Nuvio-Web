@@ -58,7 +58,7 @@ O Nuvio é um app de mídia que mostra filmes e séries usando **addons**. Este 
 
 ## 🔄 Atualizações
 
-A versão atual é a **1.3.6**. O site **não atualiza sozinho**: a cada versão nova do Nuvio, o arquivo é refeito e publicado de novo.
+A versão atual é a **1.3.9**. O site **não atualiza sozinho**: a cada versão nova do Nuvio, o arquivo é refeito e publicado de novo.
 
 ## 📜 Licença e créditos
 

@@ -606,6 +606,17 @@ __NV_ENDSCRIPT__>
     'document.addEventListener("keyup",function(e){if(!isSpace(e)||isEditable(e))return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();(e.target||document.body).dispatchEvent(synth("keyup",e));},true);' +
     '})();</scr' + 'ipt>';
 
+
+  var SIDEBAR_FIX = '<scr' + 'ipt>(function(){' +
+    'document.addEventListener("mousedown",function(e){' +
+      'var target=e.target&&e.target.closest?e.target.closest(".home-main"):null;if(!target)return;' +
+      'var focused=document.querySelector(".focused");' +
+      'var inSidebar=focused&&focused.closest&&focused.closest(".home-sidebar, .modern-sidebar-panel");if(!inSidebar)return;' +
+      'var ev=new KeyboardEvent("keydown",{keyCode:39,which:39,bubbles:true,cancelable:true});' +
+      'try{Object.defineProperty(ev,"keyCode",{get:function(){return 39}});Object.defineProperty(ev,"which",{get:function(){return 39}});}catch(_){}' +
+      'document.dispatchEvent(ev);' +
+    '},true);' +
+    '})();</scr' + 'ipt>';
   var SUBTITLE_FIX = '<scr' + 'ipt>(function(){' +
     'function press(code){var ev=new KeyboardEvent("keydown",{keyCode:code,which:code,bubbles:true,cancelable:true});try{Object.defineProperty(ev,"keyCode",{get:function(){return code}});Object.defineProperty(ev,"which",{get:function(){return code}});}catch(_){}document.dispatchEvent(ev);}' +
     'document.addEventListener("click",function(e){' +
@@ -633,7 +644,7 @@ __NV_ENDSCRIPT__>
   var ua = navigator.userAgent || "", touch = (navigator.maxTouchPoints || 0) > 0;
   var mobile = /Android|iPhone|iPad|iPod|Mobile/i.test(ua) || (touch && Math.min(screen.width, screen.height) < 900);
   var src = document.getElementById("nv-src").textContent.split("__NV_ENDSCRIPT__").join("</" + "script").split("__NV_COMMENT__").join("<" + "!--");
-  src = src.replace("<head>", "<head>" + SPACE_FIX + CURSOR_FIX + SUBTITLE_FIX);
+  src = src.replace("<head>", "<head>" + SPACE_FIX + CURSOR_FIX + SUBTITLE_FIX + SIDEBAR_FIX);
   function ratio(){
     var z = Math.min(innerWidth / 1920, innerHeight / 960);
     if(z > 0.96 && z < 1.04) z = 1;

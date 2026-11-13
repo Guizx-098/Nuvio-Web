@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Nuvio</title>
-<style>html,body{margin:0;width:100%;height:100%;background:#0d0d0d;overflow:hidden}iframe{position:fixed;left:0;top:0;border:0;transform-origin:0 0;background:#0d0d0d}</style>
+<style>html,body{margin:0;width:100%;height:100%;background:#0d0d0d;overflow:hidden;outline:none}*{outline:none}iframe{position:fixed;left:0;top:0;border:0;transform-origin:0 0;background:#0d0d0d;outline:none}</style>
 <script>
 (function(){
   try{
@@ -46,6 +46,31 @@
   apply();
   window.addEventListener("orientationchange", function(){ setTimeout(apply, 50); });
   window.addEventListener("resize", apply);
+})();
+</script>
+<script>
+(function(){
+  var done = false;
+  function tryFs(){
+    if(done) return;
+    var d = document.documentElement;
+    var req = d.requestFullscreen || d.webkitRequestFullscreen || d.mozRequestFullScreen || d.msRequestFullscreen;
+    if(!req) return;
+    if(document.fullscreenElement || document.webkitFullscreenElement) { done = true; cleanup(); return; }
+    try{
+      var r = req.call(d);
+      if(r && r.then){ r.then(function(){ done = true; cleanup(); }).catch(function(){}); }
+      else { done = true; cleanup(); }
+    }catch(e){}
+  }
+  function cleanup(){
+    document.removeEventListener("click", tryFs, true);
+    document.removeEventListener("keydown", tryFs, true);
+    document.removeEventListener("touchend", tryFs, true);
+  }
+  document.addEventListener("click", tryFs, true);
+  document.addEventListener("keydown", tryFs, true);
+  document.addEventListener("touchend", tryFs, true);
 })();
 </script>
 </head>
@@ -580,19 +605,35 @@ __NV_ENDSCRIPT__>
     'document.addEventListener("keydown",function(e){if(!isSpace(e)||isEditable(e))return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();(e.target||document.body).dispatchEvent(synth("keydown",e));},true);' +
     'document.addEventListener("keyup",function(e){if(!isSpace(e)||isEditable(e))return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();(e.target||document.body).dispatchEvent(synth("keyup",e));},true);' +
     '})();</scr' + 'ipt>';
+
+  var SUBTITLE_FIX = '<scr' + 'ipt>(function(){' +
+    'function press(code){var ev=new KeyboardEvent("keydown",{keyCode:code,which:code,bubbles:true,cancelable:true});try{Object.defineProperty(ev,"keyCode",{get:function(){return code}});Object.defineProperty(ev,"which",{get:function(){return code}});}catch(_){}document.dispatchEvent(ev);}' +
+    'document.addEventListener("click",function(e){' +
+      'var el=e.target&&e.target.closest?e.target.closest("[data-subtitle-rail][data-subtitle-index]"):null;if(!el)return;' +
+      'var rail=el.getAttribute("data-subtitle-rail");var idx=parseInt(el.getAttribute("data-subtitle-index"),10);if(!isFinite(idx))return;' +
+      'var cur=document.querySelector(".player-subtitle-"+rail+"-rail .player-dialog-item.focused[data-subtitle-index]");' +
+      'var curIdx=cur?parseInt(cur.getAttribute("data-subtitle-index"),10):null;if(curIdx===null||!isFinite(curIdx))return;' +
+      'var delta=idx-curIdx;' +
+      'e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();' +
+      'var steps=Math.abs(delta),dir=delta>0?40:38;' +
+      'for(var i=0;i<steps;i++)press(dir);' +
+      'setTimeout(function(){press(13);},0);' +
+    '},true);' +
+    '})();</scr' + 'ipt>';
   var CURSOR_FIX = '<scr' + 'ipt>(function(){' +
-    'var st=document.createElement("style");st.textContent="#playerUiRoot.nv-idle,#playerUiRoot.nv-idle *{cursor:none!important}";(document.head||document.documentElement).appendChild(st);' +
+    'var st=document.createElement("style");st.textContent="html.nv-idle,html.nv-idle *{cursor:none!important}";(document.head||document.documentElement).appendChild(st);' +
     'var t=null;' +
-    'function show(){var r=document.getElementById("playerUiRoot");if(r)r.classList.remove("nv-idle");}' +
-    'function arm(){clearTimeout(t);t=setTimeout(function(){var r=document.getElementById("playerUiRoot");if(r)r.classList.add("nv-idle");},3000);}' +
+    'function show(){document.documentElement.classList.remove("nv-idle");}' +
+    'function arm(){clearTimeout(t);t=setTimeout(function(){document.documentElement.classList.add("nv-idle");},3000);}' +
     'document.addEventListener("mousemove",function(){show();arm();},true);' +
     'document.addEventListener("mousedown",function(){show();arm();},true);' +
+    'document.addEventListener("keydown",function(){show();arm();},true);' +
     '})();</scr' + 'ipt>';
   var srcHead = document.getElementById("nv-src") ? 1 : 0;
   var ua = navigator.userAgent || "", touch = (navigator.maxTouchPoints || 0) > 0;
   var mobile = /Android|iPhone|iPad|iPod|Mobile/i.test(ua) || (touch && Math.min(screen.width, screen.height) < 900);
   var src = document.getElementById("nv-src").textContent.split("__NV_ENDSCRIPT__").join("</" + "script").split("__NV_COMMENT__").join("<" + "!--");
-  src = src.replace("<head>", "<head>" + SPACE_FIX + CURSOR_FIX);
+  src = src.replace("<head>", "<head>" + SPACE_FIX + CURSOR_FIX + SUBTITLE_FIX);
   function ratio(){
     var z = Math.min(innerWidth / 1920, innerHeight / 960);
     if(z > 0.96 && z < 1.04) z = 1;
